@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="emoji-picker.css"> <!-- Include EmojiPicker styles -->
+    <title>Chat APP</title>
+</head>
+<body>
+    
+    <h1>i-Chat</h1>
+    <nav>
+        <img src="./logo.png" alt="">
+    </nav>
+    <div class="container">
+        <div id="messages"></div>
+    </div>
+    <div class="footer">
+        <input type="text" id="msg" placeholder="Enter message">
+        <button id="emojiBtn">😊</button> <!-- Emoji button -->
+        <button id="sendBtn">Send</button>
+    </div>
+
+    <!-- Include EmojiPicker script -->
+    <script src="emoji.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+    
+
+        // Get username from localStorage
+        const userName = localStorage.getItem("username");
+
+        const messageInput = document.getElementById("msg");
+        const sendBtn = document.getElementById("sendBtn");
+        const emojiBtn = document.getElementById("emojiBtn"); // Emoji button
+        const allMessages = document.getElementById("messages");
+
+        // Initialize EmojiPicker
+        const emojiPicker = new EmojiPicker({
+            onSelect: (emoji) => {
+                messageInput.value += emoji;
+                emojiPicker.hide(); // Hide the picker after selection
+            }
+        });
+
+        // Add event listener for emoji button click
+        emojiBtn.addEventListener("click", () => {
+            emojiPicker.show(); // Show the EmojiPicker modal
+        });
+
+        socket.on('message', ({ message, sender, name }) => {
+            const messageContainer = document.createElement('div');
+            const p = document.createElement('p');
+            p.innerText = `${name}: ${message}`;
+            messageContainer.appendChild(p);
+            messageContainer.classList.add('message-container');
+        
+            if (name === userName) {
+                messageContainer.classList.add('user-message');
+            } else {
+                messageContainer.classList.add('other-message');
+            }
+        
+            allMessages.appendChild(messageContainer);
+        });
+        
+
+        sendBtn.addEventListener('click', e => {
+            const message = messageInput.value;
+            socket.emit('user-message', { message, sender: 'user', name: userName });
+            messageInput.value = '';
+        });
+    </script> 
+</body>
+</html>
